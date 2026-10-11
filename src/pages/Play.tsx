@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Nome } from '../components/Nome'
 import { Empty, Modal, shareOrCopy, StatBox, Stepper } from '../components/ui'
 import { calcularForca } from '../lib/forca'
-import { placarDosSets, setsParaVencer, unidade, vencedor } from '../lib/placar'
+import { placarDosSets, setsParaVencer, setValido, unidade, vencedor } from '../lib/placar'
 import { rankingDoDia, saldo } from '../lib/ranking'
 import { maxRodadas, mesasAgora, montarPartidas } from '../lib/rodizio'
 import { useStore } from '../lib/store'
@@ -410,6 +410,7 @@ function LancarPlacar({ play, partida, onClose, onSalvar }: { play: Play; partid
   const [quem, setQuem] = useState<'a' | 'b' | null>(null)
   const [deuce, setDeuce] = useState(false)
   const [vDeuce, setVDeuce] = useState(12)
+  const [pDeuce, setPDeuce] = useState(10)
   const placar = placarDosSets(sets, play.melhor_de)
   const fechou = placar.completo
   const alvo = setsParaVencer(play.melhor_de)
@@ -458,17 +459,26 @@ function LancarPlacar({ play, partida, onClose, onSalvar }: { play: Play; partid
                   {Array.from({ length: 10 }, (_, i) => (
                     <button key={i} className="game-btn" onClick={() => anotar(11, i)}>11x{i}</button>
                   ))}
-                  <button className="game-btn" onClick={() => setDeuce(true)}>10x10 →</button>
                 </div>
+                <button className="btn ghost block" onClick={() => setDeuce(true)}>✏️ Placar personalizado (passou do 10x10)</button>
               </>
             )}
             {quem && deuce && (
-              <div className="field">
-                <span>Passou do 10x10: quantos fez quem venceu o set?</span>
-                <Stepper value={vDeuce} min={12} max={40} onChange={setVDeuce} />
-                <button className="btn pink block" style={{ marginTop: 8 }} onClick={() => anotar(vDeuce, vDeuce - 2)}>
-                  Set {vDeuce}x{vDeuce - 2}
+              <div className="stack">
+                <div className="grid2">
+                  <div className="field">
+                    <span>{nome(partida[quem])} (venceu)</span>
+                    <Stepper value={vDeuce} min={11} max={60} onChange={(v) => { setVDeuce(v); if (v > 11) setPDeuce(v - 2) }} />
+                  </div>
+                  <div className="field">
+                    <span>{nome(partida[quem === 'a' ? 'b' : 'a'])}</span>
+                    <Stepper value={pDeuce} min={0} max={58} onChange={setPDeuce} />
+                  </div>
+                </div>
+                <button className="btn pink block" disabled={!setValido(vDeuce, pDeuce)} onClick={() => anotar(vDeuce, pDeuce)}>
+                  {setValido(vDeuce, pDeuce) ? `Set ${vDeuce}x${pDeuce}` : 'Não fecha: depois do 10x10 vai sempre a 2 (12x10, 13x11…)'}
                 </button>
+                <button className="btn ghost sm" onClick={() => setDeuce(false)}>← voltar aos placares</button>
               </div>
             )}
           </>
