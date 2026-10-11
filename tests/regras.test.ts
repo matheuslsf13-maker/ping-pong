@@ -141,3 +141,28 @@ test('forca: quem falta perde a partir da 2a falta; avulso nao conta, mas quem v
   const h = historicoDeForca(d, 'x')
   assert.deepEqual(h.map((p) => p.jogou), [false, true, false])
 })
+
+/* ------------------------------------------------------ placar por set */
+import { desempenho, placarDosSets, setValido } from '../src/lib/placar'
+
+test('set: ate 11 com 2 de vantagem; no deuce, exatamente 2', () => {
+  assert.ok(setValido(11, 0) && setValido(9, 11) && setValido(12, 10) && setValido(15, 13))
+  assert.ok(!setValido(11, 10) && !setValido(10, 8) && !setValido(13, 10) && !setValido(11, 11))
+})
+
+test('o placar final sai dos sets, e so fecha quando alguem chega nos sets da partida', () => {
+  assert.deepEqual(placarDosSets([[11, 1], [11, 0], [9, 11], [11, 2]], 5), { a: 3, b: 1, completo: true })
+  assert.deepEqual(placarDosSets([[11, 1], [11, 0]], 5), { a: 2, b: 0, completo: false })
+  assert.equal(placarDosSets([[11, 1], [11, 0], [11, 2], [11, 3]], 5).completo, false, 'set a mais depois de fechar')
+})
+
+test('desempenho: 3x0 apertado vale menos que 3x0 atropelando, e mais que 3x2', () => {
+  const p = (sets: [number, number][]) =>
+    ({ a: 'x', b: 'y', placar_a: placarDosSets(sets, 5).a, placar_b: placarDosSets(sets, 5).b, sets }) as unknown as Partida
+  const atropelo = desempenho(p([[11, 1], [11, 0], [11, 2]]))
+  const apertado = desempenho(p([[11, 9], [12, 10], [11, 9]]))
+  const cinco = desempenho(p([[11, 9], [9, 11], [11, 9], [9, 11], [11, 9]]))
+  assert.ok(atropelo > apertado && apertado > cinco && cinco > 0.5)
+  // sem o detalhe dos sets (partida antiga), so a fatia de sets
+  assert.equal(desempenho({ placar_a: 3, placar_b: 1 } as Partida), 0.75)
+})

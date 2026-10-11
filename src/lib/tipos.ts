@@ -40,6 +40,8 @@ export type Partida = {
   b: string
   placar_a: number | null
   placar_b: number | null
+  /** Os pontos de cada set, do lado a e do b ([[11, 1], [9, 11], ...]). */
+  sets?: [number, number][] | null
   mesa: number | null
   iniciada_em: string | null
   terminada_em: string | null

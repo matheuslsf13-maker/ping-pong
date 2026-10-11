@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Nome } from '../components/Nome'
 import { Empty, Modal, shareOrCopy, StatBox, Stepper } from '../components/ui'
 import { calcularForca } from '../lib/forca'
-import { opcoesDePlacar, placarValido, setsParaVencer, unidade, vencedor } from '../lib/placar'
+import { placarDosSets, setsParaVencer, unidade, vencedor } from '../lib/placar'
 import { rankingDoDia, saldo } from '../lib/ranking'
 import { maxRodadas, mesasAgora, montarPartidas } from '../lib/rodizio'
 import { useStore } from '../lib/store'
@@ -346,6 +346,7 @@ function PlayAberto({ play, onToast, onVoltar }: { play: Play; onToast: (m: stri
                     <span style={{ fontWeight: v === p.a ? 800 : 400 }}>{nome(p.a)}</span>
                     {' '}<strong className="tabular">{p.placar_a}x{p.placar_b}</strong>{' '}
                     <span style={{ fontWeight: v === p.b ? 800 : 400 }}>{nome(p.b)}</span>
+                    {p.sets?.length ? <span className="tiny muted"> · {p.sets.map((x) => `${x[0]}-${x[1]}`).join(', ')}</span> : null}
                   </span>
                   {podeEditar && <button className="btn ghost sm" onClick={() => setLancando(p)}>✏️</button>}
                 </div>
@@ -374,8 +375,9 @@ function PlayAberto({ play, onToast, onVoltar }: { play: Play; onToast: (m: stri
           play={play}
           partida={lancando}
           onClose={() => setLancando(null)}
-          onSalvar={(a, b) => {
-            salvarPartidas([{ ...lancando, placar_a: a, placar_b: b, terminada_em: lancando.terminada_em ?? new Date().toISOString(), iniciada_em: lancando.iniciada_em ?? new Date().toISOString() }])
+          onSalvar={(sets) => {
+            const { a, b } = placarDosSets(sets, play.melhor_de)
+            salvarPartidas([{ ...lancando, sets, placar_a: a, placar_b: b, terminada_em: lancando.terminada_em ?? new Date().toISOString(), iniciada_em: lancando.iniciada_em ?? new Date().toISOString() }])
             setLancando(null)
             onToast(`${nome(a > b ? lancando.a : lancando.b)} venceu ${Math.max(a, b)}x${Math.min(a, b)} ✅`)
           }}
@@ -397,53 +399,89 @@ function PlayAberto({ play, onToast, onVoltar }: { play: Play; onToast: (m: stri
   )
 }
 
-/** Quem venceu e como: os placares prontos do lado de quem venceu, ou digitado. */
-function LancarPlacar({ play, partida, onClose, onSalvar }: { play: Play; partida: Partida; onClose: () => void; onSalvar: (a: number, b: number) => void }) {
+/**
+ * O PLACAR SET POR SET: em cada set, quem venceu e com quantos pontos (11x0 ...
+ * 11x9, ou o deuce digitado). O placar da partida (3x1) sai dos sets, e os
+ * pontos de cada set entram na forca.
+ */
+function LancarPlacar({ play, partida, onClose, onSalvar }: { play: Play; partida: Partida; onClose: () => void; onSalvar: (sets: [number, number][]) => void }) {
   const { nome } = useStore()
-  const [quem, setQuem] = useState<'a' | 'b' | null>(partida.placar_a !== null ? (vencedor(partida) === partida.a ? 'a' : 'b') : null)
-  const [manual, setManual] = useState(false)
-  const [va, setVa] = useState(partida.placar_a ?? 0)
-  const [vb, setVb] = useState(partida.placar_b ?? 0)
-  const ok = placarValido(va, vb, play.melhor_de, play.pontos_set)
-  const opcoes = opcoesDePlacar(play.melhor_de, play.pontos_set)
-  const maximo = play.melhor_de > 1 ? setsParaVencer(play.melhor_de) : 99
+  const [sets, setSets] = useState<[number, number][]>(partida.sets ?? [])
+  const [quem, setQuem] = useState<'a' | 'b' | null>(null)
+  const [deuce, setDeuce] = useState(false)
+  const [vDeuce, setVDeuce] = useState(12)
+  const placar = placarDosSets(sets, play.melhor_de)
+  const fechou = placar.completo
+  const alvo = setsParaVencer(play.melhor_de)
+
+  function anotar(v: number, p: number) {
+    if (!quem) return
+    setSets([...sets, quem === 'a' ? [v, p] : [p, v]])
+    setQuem(null)
+    setDeuce(false)
+  }
 
   return (
-    <Modal title={partida.placar_a !== null ? 'Corrigir placar' : 'Como terminou?'} onClose={onClose}>
+    <Modal title={partida.placar_a !== null ? 'Corrigir placar' : 'Placar set a set'} onClose={onClose}>
       <div className="stack">
-        <div className="ask">Quem venceu?</div>
-        <div className="grid2">
-          {(['a', 'b'] as const).map((l) => (
-            <button key={l} className={`btn ${quem === l ? 'pink' : 'ghost'}`} onClick={() => setQuem(l)}>
-              {nome(partida[l])}
-            </button>
-          ))}
+        <div className="duelo">
+          <span className="lado ellipsis">{nome(partida.a)}</span>
+          <span className="placar-grande">{placar.a}x{placar.b}</span>
+          <span className="lado ellipsis">{nome(partida.b)}</span>
         </div>
-        {quem && !manual && (
+        {sets.length > 0 && (
+          <div className="stack" style={{ gap: 4 }}>
+            {sets.map((st, i) => (
+              <div key={i} className="row small">
+                <span className="muted" style={{ width: 46 }}>Set {i + 1}</span>
+                <strong className="grow tabular">{st[0]}x{st[1]} · {nome(st[0] > st[1] ? partida.a : partida.b)}</strong>
+                {i === sets.length - 1 && <button className="btn ghost sm" onClick={() => setSets(sets.slice(0, -1))}>desfazer</button>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!fechou && (
           <>
-            <div className="ask">Placar ({unidade(play.melhor_de)}), do lado de {nome(partida[quem])}:</div>
-            <div className="games-row">
-              {opcoes.map(([v, p]) => (
-                <button key={`${v}x${p}`} className="game-btn" onClick={() => (quem === 'a' ? onSalvar(v, p) : onSalvar(p, v))}>
-                  {v}x{p}
+            <div className="ask">Set {sets.length + 1}: quem venceu?</div>
+            <div className="grid2">
+              {(['a', 'b'] as const).map((l) => (
+                <button key={l} className={`btn ${quem === l ? 'pink' : 'ghost'}`} onClick={() => { setQuem(l); setDeuce(false) }}>
+                  {nome(partida[l])}
                 </button>
               ))}
             </div>
-            {play.melhor_de === 1 && (
-              <button className="linkish" onClick={() => setManual(true)}>✏️ Passou de {play.pontos_set + 1}x{play.pontos_set - 1}? Digitar</button>
+            {quem && !deuce && (
+              <>
+                <div className="ask">Quantos pontos fez quem perdeu o set?</div>
+                <div className="games-row">
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <button key={i} className="game-btn" onClick={() => anotar(11, i)}>11x{i}</button>
+                  ))}
+                  <button className="game-btn" onClick={() => setDeuce(true)}>10x10 →</button>
+                </div>
+              </>
+            )}
+            {quem && deuce && (
+              <div className="field">
+                <span>Passou do 10x10: quantos fez quem venceu o set?</span>
+                <Stepper value={vDeuce} min={12} max={40} onChange={setVDeuce} />
+                <button className="btn pink block" style={{ marginTop: 8 }} onClick={() => anotar(vDeuce, vDeuce - 2)}>
+                  Set {vDeuce}x{vDeuce - 2}
+                </button>
+              </div>
             )}
           </>
         )}
-        {manual && (
-          <>
-            <div className="grid2">
-              <div className="field"><span>{nome(partida.a)}</span><Stepper value={va} min={0} max={maximo} onChange={setVa} /></div>
-              <div className="field"><span>{nome(partida.b)}</span><Stepper value={vb} min={0} max={maximo} onChange={setVb} /></div>
-            </div>
-            <button className="btn pink block" disabled={!ok} onClick={() => onSalvar(va, vb)}>
-              {ok ? `Salvar ${va}x${vb}` : 'Placar não fecha'}
-            </button>
-          </>
+
+        {fechou ? (
+          <button className="btn pink block" onClick={() => onSalvar(sets)}>
+            ✅ Salvar {Math.max(placar.a, placar.b)}x{Math.min(placar.a, placar.b)} para {nome(placar.a > placar.b ? partida.a : partida.b)}
+          </button>
+        ) : (
+          <p className="tiny muted" style={{ margin: 0 }}>
+            Melhor de {play.melhor_de}: a partida fecha quando alguém fizer {alvo} sets. Os pontos de cada set entram na força.
+          </p>
         )}
       </div>
     </Modal>

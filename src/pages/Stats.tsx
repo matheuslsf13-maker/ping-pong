@@ -147,6 +147,7 @@ function Ficha({ id }: { id: string }) {
                 <div key={p.id} className="row small">
                   <span className="muted tabular">{dataCurta(dataDoPlay.get(p.play_id) ?? '')}</span>
                   <span className="grow">{meu > dele ? '✅' : '❌'} contra <Nome id={eu ? p.b : p.a} /></span>
+                  <span className="tiny muted tabular">{p.sets?.map((x) => (eu ? `${x[0]}-${x[1]}` : `${x[1]}-${x[0]}`)).join(' ')}</span>
                   <strong className="tabular">{meu}x{dele}</strong>
                 </div>
               )

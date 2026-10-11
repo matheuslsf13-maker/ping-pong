@@ -67,9 +67,23 @@ export async function enviar(e: Escrita): Promise<void> {
         : e.tipo === 'apagarPlay'
           ? await supabase.from('pp_plays').delete().eq('id', e.playId)
           : e.tipo === 'partidas'
-            ? await supabase.from('pp_partidas').upsert(e.partidas)
+            ? await gravarPartidas(e.partidas)
             : await supabase.from('pp_partidas').delete().in('id', e.ids)
   if (r.error) throw new Error(r.error.message)
+}
+
+/**
+ * Sem o script 02 a coluna `sets` nao existe: grava o resto (placar final) em
+ * vez de travar a fila para sempre -- e avisa, para rodarem o script.
+ */
+export let faltaColunaSets = false
+async function gravarPartidas(ps: Partida[]) {
+  const r = await supabase!.from('pp_partidas').upsert(ps)
+  if (r.error && /'sets' column/.test(r.error.message)) {
+    faltaColunaSets = true
+    return supabase!.from('pp_partidas').upsert(ps.map(({ sets: _s, ...resto }) => resto))
+  }
+  return r
 }
 
 /* ------------------------------------------------- guardado no aparelho */

@@ -1,3 +1,4 @@
+import { desempenho } from './placar'
 import { jogada, type Dados } from './tipos'
 
 /**
@@ -5,8 +6,8 @@ import { jogada, type Dados } from './tipos'
  *
  * Cada partida move a nota conforme quem estava do outro lado: vencer quem
  * esta melhor rende muito mais do que vencer quem esta pior. A margem conta
- * (a fatia de sets -- ou de pontos, na partida de um set so -- que cada um
- * fez): 2x0 vale mais que 2x1. E soma zero, entao a media fica em 1500 e as
+ * (`desempenho`: metade a fatia de sets, metade a de pontos somando os
+ * sets): 3x0 de 11-1 vale mais que 3x0 de 11-9, que vale mais que 3x2. E soma zero, entao a media fica em 1500 e as
  * faixas querem dizer a mesma coisa daqui a um ano.
  */
 export const FORCA_MEDIA = 1500
@@ -49,10 +50,8 @@ export function calcularForca(d: Dados, acompanhar?: string) {
       (x, y) => (x.terminada_em ?? '').localeCompare(y.terminada_em ?? '') || x.ordem - y.ordem,
     )
     for (const p of feitas) {
-      const a = p.placar_a as number
-      const b = p.placar_b as number
       const esperado = 1 / (1 + Math.pow(10, (nota(p.b) - nota(p.a)) / 400))
-      const surpresa = a / (a + b) - esperado
+      const surpresa = desempenho(p) - esperado
       elo.set(p.a, nota(p.a) + K * surpresa)
       elo.set(p.b, nota(p.b) - K * surpresa)
       for (const id of [p.a, p.b]) {
