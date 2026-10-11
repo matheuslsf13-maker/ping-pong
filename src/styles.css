@@ -1,0 +1,1449 @@
+:root {
+  /* ==================================================================
+     DOIS TEMAS
+
+     `:root` traz o tema CLARO e `[data-tema="escuro"]` troca so os
+     valores -- nenhum componente sabe qual tema esta valendo, todos leem
+     os mesmos nomes. Quem escolhe e a pessoa, no botao do cabecalho, e a
+     escolha fica guardada no proprio celular.
+
+     Duas cores NAO mudam de tema, e por isso tem nome proprio:
+     `--sempre-claro` e `--sempre-escuro`. Sao o texto de superficies que
+     ja tem cor propria nos dois temas -- o cabecalho escuro, o selo rosa,
+     o degrau dourado do podio. Sem elas, o texto do cabecalho sumia ao
+     trocar de tema (foi exatamente esse o bug quando o app virou escuro).
+     ================================================================== */
+
+  /* ---- superficies e texto (tema claro) ---- */
+  --fundo:   #f3f7fb;
+  --fundo-2: #f8fbfe;
+  --card:    #ffffff;
+  --card-2:  #eaf1f8;
+  --line:    #d9e4ef;
+  --line-2:  #bfd0e1;
+  --text:    #0b1f33;
+  --muted:   #5d6f86;
+
+  /* ---- marca: as cores do logo ---- */
+  --pink:    #e2620f;
+  --purple:  #1f5fbf;
+  --yellow:  #d99a00;
+  --orange:  #f08a24;
+  --teal:    #11905f;
+  --danger:  #d63a4a;
+  --por-do-sol: linear-gradient(100deg, #1f5fbf 0%, #11905f 50%, #e2620f 100%);
+
+  /* ---- fundos suaves de cada cor ---- */
+  --pink-suave:   rgba(226, 98, 15, 0.11);
+  --purple-suave: rgba(31, 95, 191, 0.10);
+  --yellow-suave: rgba(240, 168, 0, 0.14);
+  --orange-suave: rgba(244, 123, 40, 0.13);
+  --teal-suave:   rgba(17, 144, 95, 0.12);
+  --danger-suave: rgba(214, 58, 74, 0.11);
+
+  /* a cor "da marca" que a opcao escolhida, a fase e a rodada usam: e o rosa
+     do logo. Resolve no :root, entao segue o rosa mais claro do tema escuro. */
+  --marca: var(--pink);
+  --marca-suave: var(--pink-suave);
+
+  /* os nomes "pelo que querem dizer", que a forca, o podio e o tie usam:
+     --verde e o "esta bem" (nivel acima da media, cadastro em dia), --ouro o
+     primeiro lugar e o aviso, --apoio o "em evolucao", --bronze o terceiro
+     lugar, a "pausada" e quem esta comecando. Sao apelidos das cores do logo
+     (resolvem no :root, entao acompanham o tema); so o bronze e uma cor a
+     mais, porque o logo nao tem nenhuma entre o laranja e o marrom. Sem estas
+     declaracoes o var() caia no currentColor e o podio saia todo da cor do
+     texto. */
+  --verde: var(--teal);
+  --ouro: var(--yellow);
+  --ouro-suave: var(--yellow-suave);
+  --apoio: var(--purple);
+  --bronze: #b7702c;
+
+  /* ---- as duas que nao mudam de tema ---- */
+  --sempre-claro:  #f3f7fb;
+  --sempre-escuro: #0b1f33;
+
+  --radius: 18px;
+  --shadow: 0 8px 24px rgba(20, 26, 60, 0.10);
+  color-scheme: light;
+}
+
+:root[data-tema="escuro"] {
+  /* a noite na areia, sob a luz da quadra */
+  --fundo:   #0b1f33;
+  --fundo-2: #102a45;
+  --card:    #16324f;
+  --card-2:  #1b3b5d;
+  --line:    rgba(243, 247, 251, 0.14);
+  --line-2:  rgba(243, 247, 251, 0.28);
+  --text:    #f3f7fb;
+  /* cinza puxado para o roxo do logo: escolhido, nao herdado */
+  --muted:   #9fb3c8;
+
+  /* no escuro a marca precisa de mais brilho para nao apagar */
+  --pink:    #ff8a2a;
+  --purple:  #5b9bff;
+  --yellow:  #ffc940;
+  --orange:  #ffa04d;
+  --teal:    #3ddc97;
+  --danger:  #ff6b6b;
+  --por-do-sol: linear-gradient(100deg, #5b9bff 0%, #3ddc97 50%, #ff8a2a 100%);
+
+  --pink-suave:   rgba(255, 138, 42, 0.16);
+  --purple-suave: rgba(91, 155, 255, 0.18);
+  --yellow-suave: rgba(255, 201, 64, 0.14);
+  --orange-suave: rgba(255, 138, 61, 0.14);
+  --teal-suave:   rgba(61, 220, 151, 0.14);
+  --danger-suave: rgba(255, 107, 107, 0.15);
+
+  /* o bronze e a unica cor "com nome" que nao e apelido: precisa da versao
+     clara aqui, como as do logo */
+  --bronze: #f0a86e;
+
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  overscroll-behavior-y: none; /* sem "puxar" a pagina no iPhone */
+  -webkit-tap-highlight-color: transparent;
+  background: var(--fundo);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 14px calc(96px + env(safe-area-inset-bottom));
+}
+
+/* ---------- topo ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 -14px 14px;
+  /* instalado na tela de inicio o app ocupa a area do relogio/notch:
+     sem esta folga o botao Entrar fica embaixo da barra de status */
+  padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+  background: linear-gradient(135deg, var(--fundo-2) 0%, #1a4a7a 100%);
+  color: var(--text);
+  border-radius: 0 0 22px 22px;
+  box-shadow: 0 6px 20px rgba(20, 26, 60, 0.25);
+}
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.topbar h1 span { color: var(--pink); }
+.topbar .sub {
+  margin-top: 2px;
+  font-size: 12px;
+  /* o cabecalho e escuro nos dois temas, entao esta cor nao acompanha o tema */
+  color: rgba(255, 246, 238, .74);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot.on { background: var(--teal); }
+.dot.off { background: var(--orange); }
+
+/* ---------- navegacao ---------- */
+.tabbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: flex;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 18px rgba(20, 26, 60, 0.08);
+}
+.tabbar button {
+  flex: 1;
+  border: 0;
+  background: none;
+  padding: 8px 2px;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.tabbar button .ic { font-size: 19px; line-height: 1; }
+.tabbar button.active { color: var(--pink); background: var(--pink-suave); }
+
+/* ---------- blocos ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+/* cartao de destaque: no tema escuro ele nao pode ser "mais escuro",
+   entao ganha a borda do por do sol para se separar dos outros */
+.card.dark {
+  background: var(--fundo-2);
+  color: var(--text);
+  border: 1px solid var(--line-2);
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin: 4px 2px 10px;
+  color: var(--text);
+}
+.card.dark .section-title { color: var(--text); }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.tiny { font-size: 11px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row.wrap { flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+.grow { flex: 1; min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- controles ---------- */
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 15px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--sempre-escuro);
+  color: var(--sempre-claro);
+  cursor: pointer;
+  transition: filter .15s, transform .05s;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.pink { background: var(--pink); }
+.btn.purple { background: var(--purple); }
+.btn.teal { background: var(--teal); }
+.btn.ghost { background: var(--card-2); color: var(--text); border: 1px solid var(--line); }
+.btn.danger { background: var(--danger-suave); color: var(--danger); }
+.btn.sm { padding: 7px 11px; font-size: 12.5px; border-radius: 10px; }
+.btn.block { width: 100%; }
+
+.input, .select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--card-2);
+  border-radius: 12px;
+  padding: 11px 12px;
+  outline: none;
+}
+.input:focus, .select:focus { border-color: var(--pink); background: var(--card-2); }
+label.field { display: block; }
+/* vale para `label.field` e `div.field`: antes so o label pegava estilo, e os
+   campos embrulhados em div saiam com o texto corrido do corpo -- dois visuais
+   no mesmo formulario */
+.field > span {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.chip.on { background: var(--pink); border-color: var(--pink); color: var(--sempre-escuro); }
+.chip.off { opacity: .75; }
+
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.badge.open { background: var(--yellow-suave); color: var(--yellow); }
+.badge.finished { background: var(--teal-suave); color: var(--teal); }
+/* play avulso: acontece, conta no historico, mas nao vale para o campeonato */
+.badge.avulso { background: var(--purple-suave); color: var(--purple); }
+
+/* ---------- avatar ---------- */
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: var(--sempre-claro);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex: none;
+  overflow: hidden;
+}
+
+/* ---------- podio ---------- */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: 8px;
+  margin-top: 6px;
+}
+/* `min-width: 0` e o que faz o nome comprido virar reticencia. Sem isso a
+   coluna do grid cresce ate caber o nome inteiro e o podio perde a proporcao:
+   um "Mariana Valerio dos Santos" no 2o lugar deixava a coluna dele mais larga
+   que a do 1o. */
+.podium .slot { text-align: center; min-width: 0; }
+.podium .base {
+  margin-top: 8px;
+  border-radius: 14px 14px 0 0;
+  padding: 8px 4px 10px;
+  font-weight: 800;
+  color: var(--sempre-escuro);
+  /* Alturas MINIMAS, nao fixas. Com `height` o degrau do 3o lugar tinha 46px
+     para um conteudo de 53px, e o "13 pts" caia 7px para fora da barra --
+     ficava solto no fundo do cartao, parecendo defeito. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1px;
+}
+.podium .p1 .base { background: linear-gradient(180deg, var(--yellow), #e0a500); min-height: 84px; }
+.podium .p2 .base { background: linear-gradient(180deg, #cdd3e6, #9aa1bd); min-height: 66px; }
+.podium .p3 .base { background: linear-gradient(180deg, #f0a86e, var(--orange)); min-height: 56px; }
+.podium .pos, .podium .pts { line-height: 1.15; }
+.podium .pos { font-size: 22px; }
+.podium .pts { font-size: 11px; font-weight: 700; opacity: .9; }
+.podium .nm { font-size: 12px; font-weight: 700; margin-top: 6px; }
+
+/* ---------- ranking ---------- */
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 6px;
+  border-bottom: 1px dashed var(--line);
+}
+.rank-row:last-child { border-bottom: 0; }
+.rank-pos {
+  width: 26px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--muted);
+  flex: none;
+}
+.rank-row.top1 .rank-pos { color: var(--yellow); }
+.rank-row.top2 .rank-pos { color: var(--muted); }
+.rank-row.top3 .rank-pos { color: var(--orange); }
+.rank-pts { font-weight: 800; color: var(--pink); font-size: 17px; }
+
+/* ---------- partidas ---------- */
+.match {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--card);
+}
+.match.done { background: var(--fundo-2); border-color: var(--line); }
+.match-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.team { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.team .names { flex: 1; font-weight: 700; font-size: 14px; }
+.team.win .names { color: var(--teal); }
+.team.lose .names { color: var(--muted); }
+.score-input {
+  width: 46px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 7px 4px;
+  font-weight: 800;
+  background: var(--card-2);
+}
+.vs { text-align: center; font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: 2px; }
+
+/* ---------- tabelas ---------- */
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { padding: 7px 6px; text-align: right; }
+.table th:first-child, .table td:first-child { text-align: left; }
+.table thead th {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.table tbody tr { border-bottom: 1px dashed var(--line); }
+.table tbody tr:last-child { border-bottom: 0; }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat-box {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  text-align: center;
+}
+.stat-box .v { font-size: 19px; font-weight: 800; color: var(--text); }
+.stat-box .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+
+.empty {
+  text-align: center;
+  padding: 26px 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.empty .big { font-size: 34px; display: block; margin-bottom: 8px; }
+
+.banner {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.banner.warn { background: var(--yellow-suave); color: var(--yellow); }
+.banner.err { background: var(--danger-suave); color: var(--danger); }
+.banner.info { background: var(--purple-suave); color: var(--text); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  background: var(--sempre-escuro);
+  color: var(--sempre-claro);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 60;
+  box-shadow: var(--shadow);
+}
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 26, 60, .5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  padding: 12px;
+}
+.modal {
+  background: var(--card);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  padding: 16px;
+  max-height: 86vh;
+  overflow: auto;
+}
+@media (min-width: 560px) { .modal-bg { align-items: center; } }
+
+hr.sep { border: 0; border-top: 1px dashed var(--line); margin: 12px 0; }
+
+/* status maximo: 10 plays seguidos vencendo */
+.row.queen {
+  background: linear-gradient(135deg, var(--yellow-suave), var(--yellow-suave));
+  border: 1px solid var(--yellow);
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+.row.queen .badge.open { background: var(--fundo-2); color: var(--yellow); }
+
+/* ---------- lancamento de placar no celular ---------- */
+.round-nav { padding: 12px; position: sticky; top: calc(74px + env(safe-area-inset-top)); z-index: 15; }
+.chips-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px;
+}
+.chips-scroll::-webkit-scrollbar { display: none; }
+.round-chip {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card-2);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.round-chip.done { background: var(--teal-suave); border-color: var(--teal); color: var(--teal); }
+.round-chip.on { background: var(--pink); border-color: var(--pink); color: var(--sempre-escuro); }
+.btn.step { width: 40px; height: 40px; padding: 0; font-size: 20px; line-height: 1; flex: none; }
+
+.match.live { border-color: var(--pink); box-shadow: 0 2px 10px rgba(255, 138, 42, .10); }
+
+.pick-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  cursor: pointer;
+  text-align: left;
+}
+.pick-team:active { background: var(--pink-suave); border-color: var(--pink); }
+/* placar so depois de "partida iniciada": sem isso da para lancar por engano
+   a partida da quadra errada, e ela fica gravada sem quadra e sem horario */
+.pick-team:disabled { opacity: .5; cursor: not-allowed; }
+.pick-team:disabled .pick-tag { background: var(--muted); }
+.pick-team .names { flex: 1; font-weight: 700; font-size: 15px; }
+.pick-tag {
+  flex: none;
+  background: var(--pink);
+  color: var(--sempre-escuro);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.ask { font-size: 13.5px; margin: 10px 2px 8px; color: var(--text); }
+.games-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 8px; }
+.game-btn {
+  min-height: 54px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--card-2);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  cursor: pointer;
+}
+.game-btn:active { background: var(--pink); border-color: var(--pink); color: var(--sempre-escuro); }
+
+.score-box {
+  flex: none;
+  min-width: 40px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+}
+.pts-tag { flex: none; font-size: 11px; font-weight: 800; color: var(--pink); }
+.linkish {
+  border: 0;
+  background: none;
+  color: var(--pink);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  cursor: pointer;
+  padding: 0;
+}
+/* dentro de um texto corrido a acao vira link, nao etiqueta */
+.tiny .linkish {
+  font-size: inherit;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  text-decoration: underline;
+}
+
+/* ---------- indicador de sincronizacao ---------- */
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sync .dot { width: 7px; height: 7px; }
+.sync.saving .dot { background: var(--yellow); }
+.sync.pending .dot { background: var(--orange); }
+.sync.saved .dot { background: var(--teal); }
+
+/* no computador a barra de abas acompanha a coluna do app */
+@media (min-width: 760px) {
+  .tabbar {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 720px;
+    border-radius: 18px 18px 0 0;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+  }
+}
+
+/* dica curta embaixo dos campos do formulario */
+.hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 10.5px;
+  font-style: normal;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+/* opção destacada dentro de um formulário */
+.toggle-card {
+  border: 1.5px solid var(--pink);
+  background: var(--pink-suave);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.toggle-card input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--pink); flex: none; }
+.input:disabled { background: var(--card-2); color: var(--muted); }
+
+/* linha de decisão do fechamento do mês */
+.bet-row {
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--card-2);
+}
+
+/* campo numérico com − e + (bem melhor que digitar no celular) */
+.stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card-2);
+  overflow: hidden;
+}
+.stepper button {
+  flex: none;
+  width: 42px;
+  border: 0;
+  background: var(--card-2);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+.stepper button:active:not(:disabled) { background: var(--pink); color: var(--sempre-escuro); }
+.stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.stepper input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 11px 2px;
+  outline: none;
+}
+.stepper.off { opacity: .6; }
+.stepper.off button { background: var(--card-2); }
+.hint.aviso { color: var(--orange); font-weight: 700; }
+
+/* selo do campeonato na tela inicial */
+.card.hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, var(--card) 60%, var(--pink-suave));
+  border-color: var(--pink-suave);
+}
+.hero-txt { min-width: 0; }
+.hero-nome {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  background: linear-gradient(90deg, var(--purple), var(--pink), var(--orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.topbar img, .topbar svg { filter: drop-shadow(0 2px 6px rgba(0,0,0,.3)); }
+
+/* ---------- estatísticas ---------- */
+.segmented {
+  display: flex;
+  gap: 4px;
+  background: var(--card-2);
+  border-radius: 14px;
+  padding: 4px;
+}
+.segmented button {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: 11px;
+  padding: 10px 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+}
+.segmented button.on { background: var(--por-do-sol); color: var(--sempre-escuro); }
+
+.barra {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--card-2);
+  overflow: hidden;
+}
+.barra i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+}
+.mini-barra {
+  display: block;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--card-2);
+  overflow: hidden;
+  margin: 5px 0 4px;
+}
+.mini-barra i { display: block; height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink)); }
+
+.duo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 10px;
+  cursor: pointer;
+}
+.duo-row:active { background: var(--pink-suave); border-color: var(--pink); }
+/* linha que nao pode ser escolhida agora (menina em quadra, partida presa): apagada, sem toque */
+.duo-row:disabled { opacity: .5; cursor: not-allowed; }
+.duo-row:disabled:active { background: var(--card); border-color: var(--line); }
+.duo-fotos { display: flex; flex: none; }
+.duo-fotos > :last-child { margin-left: -10px; border: 2px solid var(--card); border-radius: 50%; }
+.duo-nomes { display: block; font-weight: 700; font-size: 14px; }
+.duo-pct { flex: none; font-weight: 800; color: var(--pink); font-size: 16px; }
+
+/* conferência da lista importada */
+.import-row {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--card-2);
+}
+.import-row.atencao { border-color: var(--orange); background: var(--orange-suave); }
+textarea.input { line-height: 1.45; }
+
+/* cartão do próximo play, na tela inicial */
+.card.proximo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1.5px solid var(--pink);
+  background: linear-gradient(135deg, var(--card), var(--pink-suave));
+}
+.prox-selo {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--pink);
+  color: var(--sempre-escuro);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prox-titulo {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--pink);
+}
+.prox-info { display: block; font-weight: 700; font-size: 14px; color: var(--text); }
+.prox-acao { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* rodapé discreto com a versão, para dar suporte a quem travar */
+.versao {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin: 18px 0 4px;
+}
+.versao .linkish { font-size: 10.5px; color: var(--muted); text-transform: none; letter-spacing: 0; text-decoration: underline; }
+
+/* troca de jogadora e quadra travada */
+.nome-troca {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line);
+}
+.nome-troca.ocupada { color: var(--orange); border-bottom-color: var(--orange); }
+.travada {
+  background: var(--orange-suave);
+  border: 1px solid var(--orange);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--orange);
+}
+.match.travada-borda { border-color: var(--orange); }
+
+/* partida em quadra agora */
+.match.em-quadra {
+  border-color: var(--teal);
+  background: var(--teal-suave);
+}
+
+/* ---------- fila de partidas (o play nao tem mais rodadas) ---------- */
+.match.vazia { background: var(--card-2); border-style: dashed; }
+
+/* etiqueta de grupo, quando o play e dividido por nivel */
+.grupo-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--sempre-escuro);
+  vertical-align: middle;
+}
+.grupo-tag.g1 { background: var(--pink); }
+.grupo-tag.g2 { background: var(--purple); }
+.grupo-tag.g3 { background: var(--teal); }
+.grupo-tag.g4 { background: var(--orange); }
+.repetida-tag { margin-left: 6px; }
+
+.grupo-box {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--pink);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: var(--card-2);
+}
+.grupo-nome {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--pink);
+  margin-bottom: 2px;
+}
+.grupo-box + .grupo-box .grupo-nome { color: var(--purple); }
+.grupo-box + .grupo-box { border-left-color: var(--purple); }
+
+/* linha compacta da fila e das partidas ja jogadas */
+.fila-linha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.fila-linha:last-child { border-bottom: 0; padding-bottom: 0; }
+.fila-num {
+  flex: none;
+  min-width: 30px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.fila-time {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.fila-time.venceu { font-weight: 800; color: var(--teal); }
+/* os avisos de cada linha ficam um por linha, senao colam no anterior */
+.fila-linha .tiny { display: block; line-height: 1.35; }
+.fila-time b { color: var(--text); }
+.fila-time i { font-style: normal; font-size: 11px; font-weight: 800; color: var(--pink); }
+
+/* nomes das duplas na partida: quebram em vez de serem cortados, senao no
+   celular nao da para ler (nem tocar) quem tem nome comprido */
+.team .names,
+.pick-team .names { overflow-wrap: anywhere; }
+
+/* o selo "venceu" encolhe para sobrar largura para os nomes */
+.pick-tag { padding: 5px 9px; font-size: 11px; letter-spacing: .2px; }
+.pick-team { gap: 6px; padding: 10px; }
+.pick-team .names { font-size: 14px; }
+.names .ocupada { color: var(--orange); font-weight: 800; }
+
+/* opcao "play avulso" no formulario, em roxo para nao virar mais um cartao rosa */
+.toggle-card.avulso { border-color: var(--purple); background: var(--purple-suave); }
+.toggle-card.avulso input[type='checkbox'] { accent-color: var(--purple); }
+
+/* finalizar o mes na mao */
+.fechamento {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+/* botao de trocar entre o modo diurno e o noturno, no cabecalho */
+.bt-tema {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 246, 238, .28);
+  background: rgba(255, 246, 238, .12);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.bt-tema:active { background: rgba(255, 246, 238, .22); }
+
+/* atalho de instalar, na linha de status do cabecalho. Como botao redondo ao
+   lado do tema ele apertava o titulo e custava 43px de altura -- num cabecalho
+   fixo, isso e 43px em toda tela do app. Aqui custa 5px. */
+.chip-topo {
+  flex: none;
+  border: 1px solid rgba(255, 246, 238, .3);
+  background: rgba(255, 246, 238, .14);
+  /* o cabecalho e escuro nos dois temas, entao a cor nao acompanha o tema */
+  color: rgba(255, 246, 238, .92);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.chip-topo:active { background: rgba(255, 246, 238, .24); }
+
+/* atalho para a apresentacao, na tela inicial */
+.card.apresentacao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  border: 1.5px solid var(--purple);
+  background: var(--purple-suave);
+}
+.card.apresentacao .prox-titulo { color: var(--purple); }
+.card.apresentacao .prox-selo { background: var(--purple); }
+
+/* o card e um link: sem cursor, sem pastilha e sem resposta ao toque ele
+   passava por um aviso qualquer, e ninguem clicava */
+.card.apresentacao { cursor: pointer; transition: transform .12s ease, filter .12s ease; }
+.card.apresentacao:hover { filter: brightness(1.06); }
+.card.apresentacao:active { transform: translateY(1px); }
+.passos-instalar {
+  margin: 10px 0 12px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.passos-instalar li::marker { color: var(--pink); font-weight: 800; }
+
+.prox-abrir {
+  flex: none;
+  align-self: center;
+  background: var(--purple);
+  color: var(--sempre-escuro);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---------- a barra da forca: distancia da media, para os dois lados ---------- */
+.forca-trilho {
+  position: relative;
+  height: 6px;
+  margin: 4px 0 2px;
+  border-radius: 999px;
+  background: var(--card-2);
+  overflow: hidden;
+}
+.forca-meio {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-2);
+}
+.forca-barra {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  opacity: .85;
+}
+
+/* o `span` de cada jogadora carrega o "+" da frente, entao a quebra cai
+   sempre entre os dois nomes e nunca dentro de um deles */
+.team .names { min-width: 0; line-height: 1.25; }
+.team .names > span { display: inline; }
+
+
+/* a data pedia a linha inteira para mostrar 10 caracteres */
+.input[type="date"] {
+  font-variant-numeric: tabular-nums;
+  min-height: 44px; /* alvo de toque no celular */
+}
+
+/* a lista de quem vai jogar: colunas iguais, para as bordas alinharem */
+.grade-atletas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.grade-atletas .chip {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 8px 10px;
+  min-width: 0;
+}
+.chip .nome-atleta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+/* ---------- escolha em lista (formato do play) ----------
+   Nomes longos lado a lado num `segmented` de celular quebram no meio das
+   palavras. Em lista cada opcao ganha a linha inteira e leva a explicacao. */
+.opcao {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 12px;
+  background: var(--card-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.opcao.on { border-color: var(--marca); background: var(--marca-suave); }
+.opcao-marca { color: var(--marca); font-size: 16px; line-height: 1.3; flex: none; }
+.opcao strong { display: block; font-size: 14px; }
+.opcao .tiny { display: block; margin-top: 2px; }
+
+/* linha de acoes da jogadora: quebrava deixando um "·" orfao no comeco da linha */
+.acoes-atleta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-top: 3px;
+}
+.acoes-atleta .pausada { color: var(--bronze); font-weight: 800; margin-right: 4px; }
+/* o ponto que separa as acoes e desenhado, nao digitado: como texto ele conta
+   como palavra e ia parar no fim da linha quando o proximo link nao cabia */
+.acoes-atleta .linkish + .linkish::before {
+  content: '·';
+  color: var(--muted);
+  margin-right: 10px;
+}
+
+/* a linha da jogadora: info em cima ocupando a largura toda, acoes embaixo */
+.atleta-linha { padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.atleta-linha:last-child { padding-bottom: 0; border-bottom: 0; }
+.atleta-acoes { margin-top: 8px; }
+
+/* cada fase do grupos+duplas: games e desempate no mesmo bloco */
+.fase-box {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--card-2);
+}
+.fase-nome {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--marca);
+  margin-bottom: 6px;
+}
+/* o stepper quer a largura toda (o input dele e `flex: 1`), entao dentro de um
+   `.row` ele cobria o vizinho -- aqui ele fica sozinho na linha */
+.fase-box .stepper { width: 100%; }
+
+/* opcao do entra/sai: radio + texto lado a lado; apagada quando nao se aplica */
+label.fase-box { display: flex; align-items: flex-start; cursor: pointer; }
+label.fase-box input[type='radio'] { margin-top: 3px; flex: none; }
+.fase-box.off { opacity: .45; cursor: default; }
+
+
+/* ---- uma cor por grupo ----
+   Nao saem da paleta da marca de proposito: precisam ser distinguiveis ENTRE
+   SI a distancia, na beira da quadra, e nao harmonicas. Oito porque o app
+   aceita ate 8 grupos (32 jogadoras em grupos de 4). */
+:root {
+  --g1: #d81b60; --g2: #6a3fb5; --g3: #0f8a7e; --g4: #c2610a;
+  --g5: #2d63c8; --g6: #9c1f7a; --g7: #7a7200; --g8: #0d6ea8;
+}
+:root[data-tema="escuro"] {
+  --g1: #ff6ea0; --g2: #b388ff; --g3: #34d399; --g4: #fb923c;
+  --g5: #7dd3fc; --g6: #f472b6; --g7: #fbbf24; --g8: #60a5fa;
+}
+.grupo-tag.g1 { background: var(--g1); }
+.grupo-tag.g2 { background: var(--g2); }
+.grupo-tag.g3 { background: var(--g3); }
+.grupo-tag.g4 { background: var(--g4); }
+.grupo-tag.g5 { background: var(--g5); }
+.grupo-tag.g6 { background: var(--g6); }
+.grupo-tag.g7 { background: var(--g7); }
+.grupo-tag.g8 { background: var(--g8); }
+
+/* a partida herda a cor do grupo dela: na quadra da para achar de longe */
+.match.g1, .fila-linha.g1 { border-left: 4px solid var(--g1); }
+.match.g2, .fila-linha.g2 { border-left: 4px solid var(--g2); }
+.match.g3, .fila-linha.g3 { border-left: 4px solid var(--g3); }
+.match.g4, .fila-linha.g4 { border-left: 4px solid var(--g4); }
+.match.g5, .fila-linha.g5 { border-left: 4px solid var(--g5); }
+.match.g6, .fila-linha.g6 { border-left: 4px solid var(--g6); }
+.match.g7, .fila-linha.g7 { border-left: 4px solid var(--g7); }
+.match.g8, .fila-linha.g8 { border-left: 4px solid var(--g8); }
+.fila-linha[class*=' g'] { padding-left: 8px; }
+
+.grupo-box.g1 { border-left-color: var(--g1); }
+.grupo-box.g2 { border-left-color: var(--g2); }
+.grupo-box.g3 { border-left-color: var(--g3); }
+.grupo-box.g4 { border-left-color: var(--g4); }
+.grupo-box.g5 { border-left-color: var(--g5); }
+.grupo-box.g6 { border-left-color: var(--g6); }
+.grupo-box.g7 { border-left-color: var(--g7); }
+.grupo-box.g8 { border-left-color: var(--g8); }
+.grupo-box.g1 .grupo-nome { color: var(--g1); }
+.grupo-box.g2 .grupo-nome { color: var(--g2); }
+.grupo-box.g3 .grupo-nome { color: var(--g3); }
+.grupo-box.g4 .grupo-nome { color: var(--g4); }
+.grupo-box.g5 .grupo-nome { color: var(--g5); }
+.grupo-box.g6 .grupo-nome { color: var(--g6); }
+.grupo-box.g7 .grupo-nome { color: var(--g7); }
+.grupo-box.g8 .grupo-nome { color: var(--g8); }
+
+/* o botao que abre o passo do tie, e a marca dele na lista de jogadas */
+.game-btn.no-tie {
+  border-color: var(--ouro);
+  color: var(--ouro);
+  font-weight: 800;
+}
+.tie-tag { color: var(--ouro); font-weight: 800; }
+
+
+/* placar digitado na mao, quando os botoes nao cobrem */
+.placar-manual {
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 10px;
+  background: var(--card-2);
+}
+.placar-manual .field > span { font-size: 10.5px; }
+.game-btn.manual { border-style: dashed; }
+
+/* podio do mata-mata: ouro, prata e bronze, por dupla */
+.podio-dupla {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-2);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: var(--card-2);
+}
+.podio-dupla.p1 { border-left-color: var(--ouro); background: var(--ouro-suave); }
+.podio-dupla.p2 { border-left-color: var(--line-2); }
+.podio-dupla.p3 { border-left-color: var(--bronze); }
+
+/* a rodada do mata-mata, na quadra */
+.rodada-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--marca-suave);
+  color: var(--marca);
+  vertical-align: middle;
+}
+
+/* quem ja pode ir embora */
+.banner.livres {
+  background: var(--teal-suave);
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  margin-bottom: 10px;
+}
+
+/* quem ja passou de fase e espera o resto da rodada */
+.banner.classificadas {
+  background: var(--purple-suave);
+  color: var(--purple);
+  border: 1px solid var(--purple);
+  margin-bottom: 10px;
+}
+
+/* quem ainda nao chegou, na lista do modal */
+.duo-row.off { opacity: .55; }
+
+/* ---------- check-ins ---------- */
+/* saldo da menina: o que pagou menos o que devia, somando todos os plays */
+.badge.credito { background: var(--teal-suave); color: var(--teal); }
+.badge.debito { background: var(--danger-suave); color: var(--danger); }
+.badge.zerado { background: var(--card-2); color: var(--muted); }
+/* o status da planilha: "Regularizado" so com check-in E pagamento confirmados */
+.badge.regularizado { background: var(--teal-suave); color: var(--teal); }
+.badge.verificar { background: var(--orange-suave); color: var(--orange); }
+.input.valor { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+/* a conta que passou dos 12 no mes */
+.mini-barra i.estourou { background: var(--danger); }
+.valor-pos { color: var(--teal); font-weight: 800; font-variant-numeric: tabular-nums; }
+.valor-neg { color: var(--danger); font-weight: 800; font-variant-numeric: tabular-nums; }
+/* o resumo do caixa tem 10 colunas: rola de lado dentro do cartao, nunca a pagina */
+.tabela-rolavel { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+.tabela-rolavel .table { min-width: 640px; font-variant-numeric: tabular-nums; }
+.tabela-rolavel .table th:first-child, .tabela-rolavel .table td:first-child {
+  position: sticky; left: 0; background: var(--card); z-index: 1;
+}
+.tabela-rolavel .table tfoot td { font-weight: 800; border-top: 1px solid var(--line-2); }
+/* chip numa fileira rolavel nunca quebra a palavra: rola de lado */
+.chips-scroll .chip { flex: none; white-space: nowrap; }
+/* a lista de dias: a linha inteira e o botao que abre o dia */
+.dia-linha { display: block; }
+.dia-linha.on { border-color: var(--pink); background: var(--pink-suave); }
+/* o que a menina ve nos check-ins: quantos sobram em cada arena, grande e pronto */
+.chip.disponivel { cursor: default; background: var(--teal-suave); border-color: transparent; color: var(--teal); padding: 5px 11px; }
+.chip.disponivel strong { font-size: 15px; }
+.chip.disponivel.zerado { background: var(--card-2); color: var(--muted); }
+
+/* a etiqueta da rodada/grupo do card acompanha a cor do grupo -- no campeonato,
+   a da categoria -- para a quadra ser reconhecida de longe */
+.match.g1 .rodada-tag { background: var(--g1); color: #fff; }
+.match.g2 .rodada-tag { background: var(--g2); color: #fff; }
+.match.g3 .rodada-tag { background: var(--g3); color: #fff; }
+.match.g4 .rodada-tag { background: var(--g4); color: #fff; }
+.match.g5 .rodada-tag { background: var(--g5); color: #fff; }
+.match.g6 .rodada-tag { background: var(--g6); color: #fff; }
+.match.g7 .rodada-tag { background: var(--g7); color: #fff; }
+.match.g8 .rodada-tag { background: var(--g8); color: #fff; }
+/* no escuro as cores dos grupos sao claras: texto escuro por cima */
+:root[data-tema="escuro"] .match[class*=" g"] .rodada-tag { color: #14102a; }
+
+/* a borda INTEIRA do card na cor do grupo (no campeonato, da categoria): de
+   longe, na beira da quadra, a cor diz de quem e a quadra. Em quadra agora,
+   o fundo continua verde e a borda engrossa. */
+.match.g1, .match.g1.live, .match.g1.em-quadra { border-color: var(--g1); }
+.match.g2, .match.g2.live, .match.g2.em-quadra { border-color: var(--g2); }
+.match.g3, .match.g3.live, .match.g3.em-quadra { border-color: var(--g3); }
+.match.g4, .match.g4.live, .match.g4.em-quadra { border-color: var(--g4); }
+.match.g5, .match.g5.live, .match.g5.em-quadra { border-color: var(--g5); }
+.match.g6, .match.g6.live, .match.g6.em-quadra { border-color: var(--g6); }
+.match.g7, .match.g7.live, .match.g7.em-quadra { border-color: var(--g7); }
+.match.g8, .match.g8.live, .match.g8.em-quadra { border-color: var(--g8); }
+.match[class*=" g"].em-quadra { border-width: 2px; }
+
+/* nome que abre a ficha da menina (Ranking e Stats): parece texto, com um
+   sublinhado discreto que diz "da para tocar" */
+.nome-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  min-width: 0;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--muted);
+  text-underline-offset: 3px;
+}
+.nome-link:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; border-radius: 4px; }
+
+/* o placar escolhido que foi para o tie fica marcado enquanto se escolhe o tie */
+.game-btn.marcado { background: var(--pink); border-color: var(--pink); color: var(--sempre-escuro); }
+/* o nome-botao que corta com "..." (podio, tabelas) se comporta como o texto
+   que ele substituiu: ocupa a largura que tem e nao empurra a tela */
+.nome-link.ellipsis { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row > .nome-link.ellipsis { flex: 0 1 auto; }
+/* nome que sozinho nao cabe na linha: corta com "..." em vez de empurrar o
+   card para fora da tela (o nome continua sem quebrar no meio) */
+.names .nowrap { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.pick-team .names { min-width: 0; }
+
+/* divisor de fase nas listas de partidas: onde termina a fase de grupos e
+   comecam as duplas fixas */
+.fase-divisor {
+  margin: 8px 0 4px;
+  padding: 2px 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--marca);
+  border-bottom: 1px dashed var(--line);
+}
+
+/* dupla em lista: os dois nomes aparecem sempre (ver NomesDaDupla) */
+.dupla-nomes { display: block; min-width: 0; }
+.dupla-nome { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+
+/* filtros da aba Meninas: linhas de chips que rolam de lado */
+.filtros-meninas { display: grid; gap: 6px; margin-bottom: 10px; }
+.filtros-meninas .chips-scroll { margin: 0; }
+.filtros-meninas .filtro-n { opacity: 0.7; font-variant-numeric: tabular-nums; margin-left: 2px; }
+.filtros-rodape { align-items: center; flex-wrap: wrap; gap: 6px; }
+.filtros-rodape .chip { padding: 4px 10px; font-size: 12px; }
+
+/* o nome do podio e um botao: botao em bloco nao estica sozinho, entao ficava
+   colado na esquerda do degrau. Ocupa a largura e centraliza */
+.podium .nome-link { width: 100%; text-align: center; }
+
+/* Quem ja foi Duquesa da V3: nome dourado com a coroa, para sempre.
+   O gradiente vai no texto; a coroa (emoji) fica com a cor dela. */
+.nome-duquesa {
+  background: linear-gradient(100deg, #b8860b, #f5d061 45%, #c99a2e 70%, #f5d061);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+.hall-duquesas { border: 1.5px solid var(--ouro); background: var(--ouro-suave); }
+.nome-duquesa .coroa { -webkit-text-fill-color: initial; color: initial; }
+
+/* ---------- Hall das Duquesas ---------- */
+.hall-palco { position: relative; margin: 0 0 10px; }
+.hall-cena {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 18px;
+  background: #f3e3c3;
+  touch-action: none; /* o dedo arrasta o cenario, nao a pagina */
+  box-shadow: 0 6px 22px rgba(20, 26, 60, 0.14);
+}
+@media (min-width: 720px) { .hall-cena { aspect-ratio: 16 / 10; } }
+.hall-relogio {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(255, 255, 255, 0.85); color: #1b1f42;
+  font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.hall-controles { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; }
+.hall-controles .segmented { flex: 1 1 220px; }
+.hall-numero { font-weight: 900; color: var(--ouro); min-width: 28px; }
+
+/* ====================== ping-pong ====================== */
+/* nome tocavel: parece texto, abre a ficha */
+.linkish.nome {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+  border-bottom: 1px dotted var(--line-2);
+}
+.mesa {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--fundo-2);
+}
+.mesa.viva { border-color: var(--pink); box-shadow: 0 2px 10px rgba(255, 138, 42, .12); }
+.mesa-nome { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.duelo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 8px 0; }
+.duelo .lado { font-weight: 800; font-size: 15px; min-width: 0; }
+.duelo .lado:last-child { text-align: right; }
+.placar-grande { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tabular { font-variant-numeric: tabular-nums; }

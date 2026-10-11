@@ -1,0 +1,16 @@
+{
+  "name": "Ping-Pong",
+  "short_name": "Ping-Pong",
+  "description": "Partidas 1 contra 1, placares, força e ranking do ping-pong.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1f33",
+  "theme_color": "#0b1f33",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
