@@ -96,6 +96,7 @@ export default function App() {
           <div className="banner err">
             O banco ainda não tem as tabelas do ping-pong. Rode o script <strong>supabase/01-ping-pong.sql</strong> no
             SQL Editor do Supabase (o mesmo projeto do Play de Todas) e recarregue.
+            {erro && <div className="tiny" style={{ marginTop: 6 }}>{erro}</div>}
           </div>
         )}
         {erro && !semTabelas && <div className="banner err">{erro}</div>}

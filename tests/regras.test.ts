@@ -181,3 +181,12 @@ test('completar: cria so os confrontos que faltam, continuando a fila', () => {
   assert.deepEqual(novas.map((x) => x.ordem), [10, 11, 12, 13, 14, 15])
   assert.ok(novas.every((x) => x.rodada >= 4))
 })
+
+import { faltaOScript } from '../src/lib/erros'
+
+test('aviso de script: so quando falta a TABELA, nao uma coluna nem outro erro', () => {
+  assert.ok(faltaOScript('relation "public.pp_partidas" does not exist'))
+  assert.ok(faltaOScript("Could not find the table 'public.pp_plays' in the schema cache"))
+  assert.ok(!faltaOScript("Could not find the 'sets' column of 'pp_partidas' in the schema cache"))
+  assert.ok(!faltaOScript('new row violates row-level security policy for table "pp_partidas"'))
+})

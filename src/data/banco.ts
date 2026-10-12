@@ -40,10 +40,7 @@ function trocar<T extends { id: string }>(lista: T[], novos: T[]): T[] {
   return out
 }
 
-/** As tabelas ainda nao existem no banco (o script 01 nao foi rodado). */
-export function faltaOScript(msg: string): boolean {
-  return /pp_(jogadores|plays|partidas)/.test(msg) && /(does not exist|Could not find the table|schema cache)/i.test(msg)
-}
+export { faltaOScript } from '../lib/erros'
 
 export async function carregar(): Promise<Dados> {
   if (!supabase) throw new Error('Supabase não configurado')

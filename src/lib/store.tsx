@@ -59,8 +59,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSemTabelas(false)
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      if (faltaOScript(msg)) setSemTabelas(true)
-      else setErro(`Não consegui ler o banco: ${msg}`)
+      if (faltaOScript(msg)) {
+        setSemTabelas(true)
+        setErro(msg)
+      } else if (!/fetch|network|Failed/i.test(msg)) setErro(`Não consegui ler o banco: ${msg}`)
     } finally {
       setCarregando(false)
     }
@@ -81,11 +83,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const msg = err instanceof Error ? err.message : String(err)
           // sem sinal: fica na fila e tenta de novo depois
           if (/fetch|network|Failed/i.test(msg)) break
-          if (faltaOScript(msg)) setSemTabelas(true)
-          else setErro(`O banco recusou uma alteração: ${msg}`)
+          // so a leitura decide se faltam as tabelas; erro ao gravar mostra o texto
+          // do banco e tenta de novo daqui a pouco (o intervalo e o "voltar ao app")
+          setErro(`O banco não aceitou uma alteração (vou tentar de novo): ${msg}`)
           break
         }
         setBase((b) => aplicar(b, e))
+        setErro(null)
         const resto = filaRef.current.slice(1)
         filaRef.current = resto
         setFila(resto)
@@ -101,10 +105,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void recarregar().then(() => void esvaziar())
     const t = window.setInterval(() => void esvaziar(), 15000)
     const online = () => void esvaziar()
+    // ao voltar para o app: envia o que ficou e le de novo (o celular dormiu)
+    const voltou = () => {
+      if (document.visibilityState !== 'visible') return
+      void esvaziar().then(() => {
+        if (filaRef.current.length === 0) void recarregar()
+      })
+    }
     window.addEventListener('online', online)
+    document.addEventListener('visibilitychange', voltou)
     return () => {
       window.clearInterval(t)
       window.removeEventListener('online', online)
+      document.removeEventListener('visibilitychange', voltou)
     }
   }, [recarregar, esvaziar])
 
