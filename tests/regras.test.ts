@@ -166,3 +166,18 @@ test('desempenho: 3x0 apertado vale menos que 3x0 atropelando, e mais que 3x2', 
   // sem o detalhe dos sets (partida antiga), so a fatia de sets
   assert.equal(desempenho({ placar_a: 3, placar_b: 1 } as Partida), 0.75)
 })
+
+/* ------------------------------------------- completar o todos contra todos */
+import { completarRodizio, confrontosQueFaltam } from '../src/lib/rodizio'
+
+test('completar: cria so os confrontos que faltam, continuando a fila', () => {
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f']
+  const feitas = montarPartidas('p', ids, 3) // 9 de 15
+  assert.equal(confrontosQueFaltam(ids, feitas).length, 6)
+  const novas = completarRodizio('p', ids, feitas)
+  assert.equal(novas.length, 6)
+  const todas = [...feitas, ...novas]
+  assert.equal(confrontosQueFaltam(ids, todas).length, 0)
+  assert.deepEqual(novas.map((x) => x.ordem), [10, 11, 12, 13, 14, 15])
+  assert.ok(novas.every((x) => x.rodada >= 4))
+})

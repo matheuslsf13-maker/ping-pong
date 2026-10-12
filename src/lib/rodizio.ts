@@ -119,3 +119,36 @@ export function mesasAgora(
   for (const p of emJogo) if (!out.some((x) => x.partida?.id === p.id)) out.push({ mesa: p.mesa ?? 0, partida: p, emJogo: true })
   return out
 }
+
+const parDe = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
+
+/** Os confrontos do todos contra todos que ainda nao estao no play. */
+export function confrontosQueFaltam(ids: string[], partidas: Partida[]): [string, string][] {
+  const tem = new Set(partidas.map((p) => parDe(p.a, p.b)))
+  return rodadasDoRodizio(ids).flat().filter(([a, b]) => !tem.has(parDe(a, b)))
+}
+
+/**
+ * As partidas que faltam para fechar o todos contra todos (um play criado com
+ * menos rodadas, ou alguem que entrou depois), na ordem das rodadas do
+ * rodizio, depois das que ja existem.
+ */
+export function completarRodizio(playId: string, ids: string[], partidas: Partida[]): Partida[] {
+  const tem = new Set(partidas.map((p) => parDe(p.a, p.b)))
+  let ordem = partidas.reduce((m, p) => Math.max(m, p.ordem), 0)
+  const ultimaRodada = partidas.reduce((m, p) => Math.max(m, p.rodada), 0)
+  const out: Partida[] = []
+  let r = ultimaRodada
+  for (const rodada of rodadasDoRodizio(ids)) {
+    const faltam = rodada.filter(([a, b]) => !tem.has(parDe(a, b)))
+    if (faltam.length === 0) continue
+    r++
+    for (const [a, b] of faltam) {
+      out.push({
+        id: uid(), play_id: playId, ordem: ++ordem, rodada: r, a, b,
+        placar_a: null, placar_b: null, mesa: null, iniciada_em: null, terminada_em: null,
+      })
+    }
+  }
+  return out
+}

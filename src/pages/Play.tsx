@@ -4,7 +4,7 @@ import { Empty, Modal, shareOrCopy, StatBox, Stepper } from '../components/ui'
 import { calcularForca } from '../lib/forca'
 import { placarDosSets, setsParaVencer, setValido, unidade, vencedor } from '../lib/placar'
 import { rankingDoDia, saldo } from '../lib/ranking'
-import { maxRodadas, mesasAgora, montarPartidas } from '../lib/rodizio'
+import { completarRodizio, confrontosQueFaltam, maxRodadas, mesasAgora, montarPartidas } from '../lib/rodizio'
 import { useStore } from '../lib/store'
 import { dataCurta, hojeISO, jogada, plural, uid, type Partida, type Play } from '../lib/tipos'
 
@@ -72,10 +72,9 @@ function CriarPlay({ onToast, onVoltar, onCriou }: { onToast: (m: string) => voi
   const [mesas, setMesas] = useState(1)
   const [melhorDe, setMelhorDe] = useState(3)
   const pontosSet = 11 // o set e sempre de 11, como no oficial
-  const [rodadasEscolhidas, setRodadas] = useState<number | null>(null)
   const [ranked, setRanked] = useState(true)
-  const max = maxRodadas(sel.length)
-  const rodadas = Math.min(rodadasEscolhidas ?? max, max)
+  // sempre todos contra todos: cada um enfrenta cada um uma vez
+  const rodadas = maxRodadas(sel.length)
   const total = Math.floor(sel.length / 2) * rodadas
   // uns 12 min por partida de melhor de 3, 18 de melhor de 5, 6 de partida unica (por mesa)
   const minutos = Math.ceil(total / Math.max(1, Math.min(mesas, Math.floor(sel.length / 2)))) * (melhorDe * 4 + 2)
@@ -154,18 +153,12 @@ function CriarPlay({ onToast, onVoltar, onCriou }: { onToast: (m: string) => voi
             <span>Mesas</span>
             <Stepper value={mesas} min={1} max={8} onChange={setMesas} />
           </div>
-          {sel.length >= 3 && (
-            <div className="field">
-              <span>Rodadas</span>
-              <Stepper value={rodadas} min={1} max={max} onChange={setRodadas} />
-              <em className="hint">
-                {rodadas === max
-                  ? `todos contra todos: cada um enfrenta cada um uma vez`
-                  : `cada um joga ${sel.length % 2 === 0 ? rodadas : `${rodadas - 1} ou ${rodadas}`} partidas, não todas`}
-                {` · ${plural(total, 'partida')} · uns ${minutos >= 60 ? `${Math.floor(minutos / 60)}h${String(minutos % 60).padStart(2, '0')}` : `${minutos} min`}`}
-                {sel.length % 2 === 1 ? ' · com número ímpar, um folga em cada rodada' : ''}
-              </em>
-            </div>
+          {sel.length >= 2 && (
+            <em className="hint">
+              Todos contra todos: cada um enfrenta cada um uma vez · {plural(total, 'partida')} · uns{' '}
+              {minutos >= 60 ? `${Math.floor(minutos / 60)}h${String(minutos % 60).padStart(2, '0')}` : `${minutos} min`}
+              {sel.length % 2 === 1 ? ' · com número ímpar, um folga em cada rodada' : ''}
+            </em>
           )}
           <label className={`toggle-card row${ranked ? '' : ' avulso'}`} style={{ gap: 10, cursor: 'pointer' }}>
             <input type="checkbox" checked={ranked} onChange={(e) => setRanked(e.target.checked)} />
@@ -202,6 +195,13 @@ function PlayAberto({ play, onToast, onVoltar }: { play: Play; onToast: (m: stri
   const fila = partidas.filter((p) => !jogada(p) && !p.iniciada_em && !naMesa.has(p.id))
   const ranking = useMemo(() => rankingDoDia(dados, play.id), [dados, play.id])
   const un = unidade(play.melhor_de)
+  const faltam = confrontosQueFaltam(play.jogador_ids, partidas)
+
+  function completar() {
+    salvarPartidas(completarRodizio(play.id, play.jogador_ids, partidas))
+    if (play.status !== 'aberto') salvarPlay({ ...play, status: 'aberto' })
+    onToast(`${plural(faltam.length, 'confronto entrou', 'confrontos entraram')} na fila 🏓`)
+  }
 
   function iniciar(p: Partida, mesa: number) {
     salvarPartidas([{ ...p, mesa, iniciada_em: new Date().toISOString() }])
@@ -242,6 +242,19 @@ function PlayAberto({ play, onToast, onVoltar }: { play: Play; onToast: (m: stri
           <StatBox k="Líder" v={<span style={{ fontSize: 13 }}>{ranking[0]?.jogos ? nome(ranking[0].id) : '—'}</span>} />
         </div>
       </div>
+
+      {podeEditar && faltam.length > 0 && (
+        <div className="banner warn">
+          <div>
+            ⚠️ Não é todos contra todos: {plural(faltam.length, 'confronto ficou', 'confrontos ficaram')} de fora (
+            {faltam.slice(0, 4).map(([a, b]) => `${nome(a)} × ${nome(b)}`).join(', ')}
+            {faltam.length > 4 ? '…' : ''}).
+          </div>
+          <button className="btn pink sm block" style={{ marginTop: 8 }} onClick={completar}>
+            ➕ Completar o todos contra todos{play.status === 'aberto' ? '' : ' (reabre o play)'}
+          </button>
+        </div>
+      )}
 
       {play.status === 'aberto' && (
         <div className="card">
